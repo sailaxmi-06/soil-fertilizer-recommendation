@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Soil Fertilizer App</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .hidden { display: none; }
+    input, select, button { margin: 5px 0; display: block; }
+  </style>
+</head>
+<body>
+<div id="loginDiv">
+  <h2>Login / Register</h2>
+  Name: <input type="text" id="name" required><br>
+  Mobile Number: <input type="text" id="mobile" required><br>
+  Language: 
+  <select id="language" required>
+    <option value="">Select Language</option>
+    <option value="en">English</option>
+    <option value="hi">Hindi</option>
+    <option value="te">Telugu</option>
+  </select><br>
+  <button id="loginBtn">Submit</button>
+</div>
+
+<div id="welcomeDiv" class="hidden">
+  <h2 id="welcomeMsg"></h2>
+  <button id="startBtn">Continue to Fertilizer Form</button>
+</div>
+
+<div id="fertilizerDiv" class="hidden">
+  <h2>Enter Soil Details</h2>
+  Nitrogen: <input type="number" id="N" required><br>
+  Phosphorus: <input type="number" id="P" required><br>
+  Potassium: <input type="number" id="K" required><br>
+  pH: <input type="number" id="pH" step="0.1" required><br>
+  Crop: 
+  <select id="crop" required>
+    <option value="">Select Crop</option>
+    <option value="rice">Rice</option>
+    <option value="wheat">Wheat</option>
+    <option value="maize">Maize</option>
+    <option value="cotton">Cotton</option>
+  </select><br>
+  <button id="fertBtn">Get Recommendation</button>
+</div>
+
+<!-- RESULT -->
+<div id="resultDiv" class="hidden">
+  <h2 id="resultTitle"></h2>
+  <ul id="resultList"></ul>
+</div>
+
+<script>
+const messages = {
+  en: {
+    welcome: "Welcome to this website, ",
+    fertilizerTitle: "Fertilizer Recommendations for ",
+    nitrogenLow: "Nitrogen deficiency: Add Urea ≈ ",
+    phosphorusLow: "Phosphorus deficiency: Add DAP ≈ ",
+    potassiumLow: "Potassium deficiency: Add MOP ≈ ",
+    nitrogenOk: "Nitrogen is sufficient.",
+    phosphorusOk: "Phosphorus is sufficient.",
+    potassiumOk: "Potassium is sufficient.",
+    phAcid: "Soil is acidic. Consider adding Lime.",
+    phAlkaline: "Soil is alkaline. Add Gypsum or organic matter.",
+    phOk: "Soil pH is good."
+  },
+  hi: {
+    welcome: "इस वेबसाइट में आपका स्वागत है, ",
+    fertilizerTitle: "के लिए उर्वरक सिफारिशें ",
+    nitrogenLow: "नाइट्रोजन की कमी: यूरिया जोड़ें ≈ ",
+    phosphorusLow: "फॉस्फोरस की कमी: DAP जोड़ें ≈ ",
+    potassiumLow: "पोटेशियम की कमी: MOP जोड़ें ≈ ",
+    nitrogenOk: "नाइट्रोजन पर्याप्त है।",
+    phosphorusOk: "फॉस्फोरस पर्याप्त है।",
+    potassiumOk: "पोटेशियम पर्याप्त है।",
+    phAcid: "मिट्टी अम्लीय है। चूना डालें।",
+    phAlkaline: "मिट्टी क्षारीय है। जिप्सम या कार्बनिक पदार्थ डालें।",
+    phOk: "मिट्टी का pH अच्छा है।"
+  },
+  te: {
+    welcome: "ఈ వెబ్‌సైట్‌కి స్వాగతం, ",
+    fertilizerTitle: "కోసం ఎరువులు సూచనలు ",
+    nitrogenLow: "నైట్రోజన్ లోపం: యూరియా జోడించండి ≈ ",
+    phosphorusLow: "ఫాస్ఫరస్ లోపం: DAP జోడించండి ≈ ",
+    potassiumLow: "పొటాష్ లోపం: MOP జోడించండి ≈ ",
+    nitrogenOk: "నైట్రోజన్ సరిపోతుంది.",
+    phosphorusOk: "ఫాస్ఫరస్ సరిపోతుంది.",
+    potassiumOk: "పొటాష్ సరిపోతుంది.",
+    phAcid: "మట్టీ ఆమ్లం ఉంది. లైమ్ జోడించండి.",
+    phAlkaline: "మట్టీ ఆల్కలైన్ ఉంది. జిప్సం లేదా ఆర్గానిక్ పదార్ధాలు జోడించండి.",
+    phOk: "మట్టీ pH సరిగ్గా ఉంది."
+  }
+};
+
+const cropNPK = {
+  rice: { N: 120, P: 60, K: 40 },
+  wheat: { N: 100, P: 50, K: 40 },
+  maize: { N: 150, P: 70, K: 60 },
+  cotton: { N: 80, P: 40, K: 60 }
+};
+
+const fertComp = { urea: 0.46, dap: 0.18, mop: 0.50 };
+
+let lang = 'en'; 
+document.getElementById('loginBtn').addEventListener('click', ()=>{
+  const name = document.getElementById('name').value.trim();
+  const mobile = document.getElementById('mobile').value.trim();
+  lang = document.getElementById('language').value;
+
+  if(!name || !mobile || !lang){
+    alert("Please fill all fields!");
+    return;
+  }
+
+  document.getElementById('loginDiv').classList.add('hidden');
+  document.getElementById('welcomeMsg').innerText = messages[lang].welcome + name + "!";
+  document.getElementById('welcomeDiv').classList.remove('hidden');
+});
+
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  document.getElementById('welcomeDiv').classList.add('hidden');
+  document.getElementById('fertilizerDiv').classList.remove('hidden');
+});
+
+document.getElementById('fertBtn').addEventListener('click', ()=>{
+  const N = parseFloat(document.getElementById('N').value);
+  const P = parseFloat(document.getElementById('P').value);
+  const K = parseFloat(document.getElementById('K').value);
+  const pH = parseFloat(document.getElementById('pH').value);
+  const crop = document.getElementById('crop').value;
+
+  if(isNaN(N) || isNaN(P) || isNaN(K) || isNaN(pH) || !crop){
+    alert("Please fill all soil details!");
+    return;
+  }
+
+  const ideal = cropNPK[crop];
+  let rec = [];
+
+  const N_def = ideal.N - N;
+  if(N_def > 0) rec.push(messages[lang].nitrogenLow + (N_def/fertComp.urea).toFixed(2) + " kg/acre");
+  else rec.push(messages[lang].nitrogenOk);
+
+  const P_def = ideal.P - P;
+  if(P_def > 0) rec.push(messages[lang].phosphorusLow + (P_def/fertComp.dap).toFixed(2) + " kg/acre");
+  else rec.push(messages[lang].phosphorusOk);
+
+  const K_def = ideal.K - K;
+  if(K_def > 0) rec.push(messages[lang].potassiumLow + (K_def/fertComp.mop).toFixed(2) + " kg/acre");
+  else rec.push(messages[lang].potassiumOk);
+
+  if(pH < 6.5) rec.push(messages[lang].phAcid);
+  else if(pH > 7.5) rec.push(messages[lang].phAlkaline);
+  else rec.push(messages[lang].phOk);
+
+  document.getElementById('fertilizerDiv').classList.add('hidden');
+  document.getElementById('resultTitle').innerText = messages[lang].fertilizerTitle + crop.charAt(0).toUpperCase() + crop.slice(1);
+  document.getElementById('resultList').innerHTML = rec.map(i => `<li>${i}</li>`).join('');
+  document.getElementById('resultDiv').classList.remove('hidden');
+});
+</script>
